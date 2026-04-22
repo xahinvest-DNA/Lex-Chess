@@ -1,0 +1,16 @@
+.git
+.env
+.env.local
+data
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.sqlite3
+**/*.jsonl
+legal_intake_bot.egg-info
+site/.next
+site/node_modules
+site/data
+site/.env
+site/.env.local
+webhook URL Bitrix.txt

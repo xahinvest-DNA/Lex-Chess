@@ -1,0 +1,46 @@
+services:
+  web:
+    build:
+      context: ./site
+    restart: unless-stopped
+    env_file:
+      - ./deploy/site.env
+    volumes:
+      - lead_data:/app/data
+    expose:
+      - "3000"
+    depends_on:
+      - bot
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.bot
+    restart: unless-stopped
+    env_file:
+      - ./deploy/bot.env
+    environment:
+      DB_PATH: /data/legal_intake.sqlite3
+      WEBSITE_LEADS_JSONL_PATH: /app/site/data/site-leads.jsonl
+    volumes:
+      - bot_data:/data
+      - lead_data:/app/site/data
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+
+volumes:
+  bot_data:
+  lead_data:
+  caddy_data:
+  caddy_config:

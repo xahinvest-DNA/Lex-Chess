@@ -1,0 +1,17 @@
+{
+  "name": "legal-services-site",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "resend:bitrix": "node --env-file=.env.local scripts/resend-bitrix.js"
+  },
+  "dependencies": {
+    "next": "16.2.4",
+    "react": "19.2.5",
+    "react-dom": "19.2.5"
+  }
+}

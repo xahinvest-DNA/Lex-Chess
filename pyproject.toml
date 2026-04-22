@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "legal-intake-bot"
+version = "0.1.0"
+description = "Telegram bot for inbound legal lead intake, qualification, and Bitrix24 sync."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "aiogram>=3.27,<4.0",
+    "httpx>=0.28,<0.29",
+    "pydantic>=2.8,<3.0",
+    "pydantic-settings>=2.4,<3.0",
+]
+
+[project.optional-dependencies]
+dev = []
+
+[project.scripts]
+legal-intake-bot = "app.main:run"
+
+[tool.setuptools]
+packages = ["app", "app.bot", "app.domain", "app.integrations", "app.services", "app.storage"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

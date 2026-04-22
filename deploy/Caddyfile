@@ -1,0 +1,4 @@
+dnatext.ru, www.dnatext.ru {
+    encode gzip zstd
+    reverse_proxy web:3000
+}
