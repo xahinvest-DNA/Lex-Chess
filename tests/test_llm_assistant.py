@@ -41,6 +41,20 @@ class LLMAssistantTests(unittest.TestCase):
         self.assertIn("Развод", content)
         self.assertIn("Когда можно прислать документы?", content)
 
+    def test_followup_input_contains_recent_dialog_history(self) -> None:
+        payload = build_followup_input(
+            "На жену, машину я покупал до брака",
+            {"practice_area": "Раздел имущества"},
+            [
+                {"role": "assistant", "content": "Квартира оформлена на кого?"},
+                {"role": "user", "content": "Квартира на жену."},
+            ],
+        )
+
+        content = payload[0]["content"]
+        self.assertIn("Бот: Квартира оформлена на кого?", content)
+        self.assertIn("Клиент: Квартира на жену.", content)
+
     def test_extract_output_text_supports_sdk_convenience_field(self) -> None:
         self.assertEqual(extract_output_text({"output_text": "Ответ"}), "Ответ")
 

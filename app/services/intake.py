@@ -304,7 +304,12 @@ class IntakeCoordinator:
                 remove_keyboard=True,
             )
 
-        ai_reply = await self.llm.answer_followup(text, completed.get("answers", {}))
+        completed = self._append_followup_history(chat_id, completed, "user", text)
+        ai_reply = await self.llm.answer_followup(
+            text,
+            completed.get("answers", {}),
+            completed.get("followup_history", []),
+        )
         if not ai_reply:
             return Prompt(
                 text=(
@@ -324,14 +329,27 @@ class IntakeCoordinator:
             except Exception:
                 pass
 
+        self._append_followup_history(chat_id, completed, "assistant", ai_reply)
         return Prompt(
             text=(
-                "Спасибо, добавил уточнение к вашей заявке. Юрист увидит его в карточке лида.\n\n"
-                "Предварительный AI-ответ, не заменяет консультацию юриста:\n"
+                "Принял, добавил к заявке.\n\n"
                 f"{ai_reply}"
             ),
             remove_keyboard=True,
         )
+
+    def _append_followup_history(
+        self,
+        chat_id: int,
+        completed: dict[str, Any],
+        role: str,
+        content: str,
+    ) -> dict[str, Any]:
+        history = list(completed.get("followup_history", []))
+        history.append({"role": role, "content": content.strip()})
+        refreshed = {**completed, "followup_history": history[-8:]}
+        self.storage.save_completed_chat(chat_id, refreshed)
+        return refreshed
 
     def _resolve_completed_lead_id(self, chat_id: int, completed: dict[str, Any]) -> int | None:
         lead_id = _int_or_none(completed.get("lead_id"))

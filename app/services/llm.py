@@ -26,7 +26,12 @@ class LLMAssistant:
             return "LLM включен, но не задан OPENAI_API_KEY."
         return f"LLM включен. Модель: {self.settings.openai_model}."
 
-    async def answer_followup(self, user_message: str, answers: dict[str, Any]) -> str | None:
+    async def answer_followup(
+        self,
+        user_message: str,
+        answers: dict[str, Any],
+        history: list[dict[str, str]] | None = None,
+    ) -> str | None:
         if not self.is_enabled:
             return None
 
@@ -41,7 +46,7 @@ class LLMAssistant:
                     json={
                         "model": self.settings.openai_model,
                         "instructions": build_followup_instructions(self.settings),
-                        "input": build_followup_input(user_message, answers),
+                        "input": build_followup_input(user_message, answers, history or []),
                         "max_output_tokens": self.settings.openai_max_output_tokens,
                     },
                 )
@@ -56,18 +61,26 @@ class LLMAssistant:
 
 def build_followup_instructions(settings: Settings) -> str:
     return (
-        f"Ты ассистент юридической компании {settings.law_firm_name}. "
-        "Отвечай клиенту на русском языке кратко, спокойно и профессионально. "
-        "Контекст: клиент уже оставил заявку, юрист увидит переписку в CRM. "
+        f"Ты живой и внимательный координатор юридической компании {settings.law_firm_name}. "
+        "Клиент уже оставил заявку, а вся переписка попадает юристу в CRM. "
+        "Отвечай как человек в чате: тепло, спокойно, без канцелярита и без повторяющихся дисклеймеров. "
+        "Не называй себя AI, моделью, роботом или предварительным AI-ответом. "
+        "Не начинай каждый ответ одинаково. Не повторяй постоянно, что юрист все увидит: это можно сказать только если действительно уместно. "
+        "Учитывай предыдущие сообщения в этом Telegram-диалоге и продолжай разговор, а не начинай квалификацию заново. "
+        "Если клиент сообщает новый факт, коротко подтверди, что понял, и объясни, почему этот факт важен. "
+        "Если нужен следующий шаг, задай максимум 1-2 точных вопроса или попроси 1-3 конкретных документа. "
+        "Не перегружай клиента длинными списками документов в каждом ответе. "
         "Не обещай результат, не давай гарантий, не называй точную стоимость и не выдавай ответ за полноценную юридическую консультацию. "
-        "Можно: объяснить общий следующий шаг, попросить недостающие документы или уточнения, помочь структурировать вопрос. "
-        "Нельзя: составлять окончательную правовую позицию, ссылаться на несуществующие нормы, придумывать факты. "
-        "Если данных недостаточно, задай 1-2 уточняющих вопроса. "
-        "Ответ должен быть до 900 символов."
+        "Не составляй окончательную правовую позицию и не придумывай факты. "
+        "Ответ должен быть до 650 символов."
     )
 
 
-def build_followup_input(user_message: str, answers: dict[str, Any]) -> list[dict[str, str]]:
+def build_followup_input(
+    user_message: str,
+    answers: dict[str, Any],
+    history: list[dict[str, str]] | None = None,
+) -> list[dict[str, str]]:
     context_lines = [
         f"Направление: {answers.get('practice_area') or '-'}",
         f"Ситуация: {answers.get('situation_summary') or '-'}",
@@ -77,12 +90,21 @@ def build_followup_input(user_message: str, answers: dict[str, Any]) -> list[dic
         f"Регион: {answers.get('region') or '-'}",
         f"Предпочтительное время: {answers.get('preferred_time') or '-'}",
     ]
+    history_lines = []
+    for item in (history or [])[-8:]:
+        role = "Клиент" if item.get("role") == "user" else "Бот"
+        content = str(item.get("content") or "").strip()
+        if content:
+            history_lines.append(f"{role}: {content}")
+
     return [
         {
             "role": "user",
             "content": (
                 "Данные заявки:\n"
                 + "\n".join(context_lines)
+                + "\n\nПоследние сообщения в Telegram:\n"
+                + ("\n".join(history_lines) if history_lines else "-")
                 + "\n\nНовое сообщение клиента:\n"
                 + user_message
             ),
