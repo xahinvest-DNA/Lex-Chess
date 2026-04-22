@@ -2,6 +2,11 @@ services:
   web:
     build:
       context: ./site
+      args:
+        NEXT_PUBLIC_SITE_URL: https://dnatext.ru
+        NEXT_PUBLIC_PHONE: "+7 (999) 000-00-00"
+        NEXT_PUBLIC_EMAIL: office@lexchess.ru
+        NEXT_PUBLIC_TELEGRAM_URL: https://t.me/lexchess_bot
     restart: unless-stopped
     env_file:
       - ./deploy/site.env
