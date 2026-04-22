@@ -56,6 +56,12 @@ class Settings(BaseSettings):
     qualified_follow_up_hours: int = Field(default=6, alias="QUALIFIED_FOLLOW_UP_HOURS")
     telegram_attachment_max_mb: int = Field(default=10, alias="TELEGRAM_ATTACHMENT_MAX_MB")
 
+    llm_enabled: bool = Field(default=False, alias="LLM_ENABLED")
+    openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
+    openai_model: str = Field(default="gpt-5.2", alias="OPENAI_MODEL")
+    openai_timeout_seconds: float = Field(default=20.0, alias="OPENAI_TIMEOUT_SECONDS")
+    openai_max_output_tokens: int = Field(default=350, alias="OPENAI_MAX_OUTPUT_TOKENS")
+
     db_path: Path = Field(default=Path("data/legal_intake.sqlite3"), alias="DB_PATH")
     website_leads_jsonl_path: Path = Field(
         default=Path("site/data/site-leads.jsonl"),
@@ -82,6 +88,14 @@ class Settings(BaseSettings):
     @field_validator("booking_url", mode="before")
     @classmethod
     def empty_string_to_none(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        value = value.strip()
+        return value or None
+
+    @field_validator("openai_api_key", mode="before")
+    @classmethod
+    def empty_openai_key_to_none(cls, value: str | None) -> str | None:
         if value is None:
             return None
         value = value.strip()

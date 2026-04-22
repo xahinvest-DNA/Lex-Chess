@@ -21,6 +21,7 @@ from app.services.formatters import (
     build_reminder_text,
     build_user_confirmation,
 )
+from app.services.llm import LLMAssistant
 from app.storage.sqlite import SQLiteStorage, utcnow
 from app.services.website_leads import WebsiteLeadStore
 
@@ -43,6 +44,7 @@ class IntakeCoordinator:
         self.bot = bot
         self.questions = build_questions(settings)
         self.website_leads = WebsiteLeadStore(settings.website_leads_jsonl_path)
+        self.llm = LLMAssistant(settings)
 
     async def start(self, chat_id: int, user: User) -> Prompt:
         existing_session = self.storage.get_session(chat_id)
@@ -88,6 +90,9 @@ class IntakeCoordinator:
         self.storage.delete_completed_chat(chat_id)
         self.storage.cancel_pending_reminders(chat_id)
         return await self.start(chat_id, user)
+
+    def llm_status(self) -> str:
+        return self.llm.status_text()
 
     async def start_from_website(self, chat_id: int, user: User, request_id: str) -> Prompt:
         completed = self.storage.get_completed_chat(chat_id)
@@ -141,22 +146,7 @@ class IntakeCoordinator:
         if not session:
             completed = self.storage.get_completed_chat(chat_id)
             if completed:
-                added = await self._add_followup_to_completed_lead(chat_id, text, completed)
-                if not added:
-                    return Prompt(
-                        text=(
-                            "Я сохранил ваше сообщение в чате, но сейчас не смог добавить его в карточку Bitrix. "
-                            "Пожалуйста, попробуйте еще раз чуть позже или дождитесь связи юриста."
-                        ),
-                        remove_keyboard=True,
-                    )
-                return Prompt(
-                    text=(
-                        "Спасибо, добавил уточнение к вашей заявке. "
-                        "Юрист увидит его в карточке лида."
-                    ),
-                    remove_keyboard=True,
-                )
+                return await self._handle_completed_followup(chat_id, text, completed)
             return await self.start(chat_id, user)
 
         question = self.questions[session["step_index"]]
@@ -297,6 +287,51 @@ class IntakeCoordinator:
             return True
         except Exception:
             return False
+
+    async def _handle_completed_followup(
+        self,
+        chat_id: int,
+        text: str,
+        completed: dict[str, Any],
+    ) -> Prompt:
+        added = await self._add_followup_to_completed_lead(chat_id, text, completed)
+        if not added:
+            return Prompt(
+                text=(
+                    "Я сохранил ваше сообщение в чате, но сейчас не смог добавить его в карточку Bitrix. "
+                    "Пожалуйста, попробуйте еще раз чуть позже или дождитесь связи юриста."
+                ),
+                remove_keyboard=True,
+            )
+
+        ai_reply = await self.llm.answer_followup(text, completed.get("answers", {}))
+        if not ai_reply:
+            return Prompt(
+                text=(
+                    "Спасибо, добавил уточнение к вашей заявке. "
+                    "Юрист увидит его в карточке лида."
+                ),
+                remove_keyboard=True,
+            )
+
+        lead_id = self._resolve_completed_lead_id(chat_id, completed)
+        if lead_id:
+            try:
+                await self.bitrix_client.add_timeline_comment(
+                    int(lead_id),
+                    "AI-ответ клиенту в Telegram после завершения заявки:\n" + ai_reply,
+                )
+            except Exception:
+                pass
+
+        return Prompt(
+            text=(
+                "Спасибо, добавил уточнение к вашей заявке. Юрист увидит его в карточке лида.\n\n"
+                "Предварительный AI-ответ, не заменяет консультацию юриста:\n"
+                f"{ai_reply}"
+            ),
+            remove_keyboard=True,
+        )
 
     def _resolve_completed_lead_id(self, chat_id: int, completed: dict[str, Any]) -> int | None:
         lead_id = _int_or_none(completed.get("lead_id"))

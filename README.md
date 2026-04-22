@@ -96,6 +96,20 @@ Then it:
 - optionally shares a booking link
 - creates a Bitrix24 lead and task
 
+## Optional LLM test mode
+
+The Telegram bot can answer follow-up messages after a lead is already created.
+This mode is off by default and does not affect the deterministic intake flow.
+
+```env
+LLM_ENABLED=true
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-5.2
+```
+
+When enabled, the bot adds the client's follow-up to Bitrix24, asks the LLM for a short cautious reply,
+then stores the AI reply in the lead timeline. Use `/llm_status` in Telegram to verify configuration.
+
 ## Notes
 
 - The bot uses long polling, which is the simplest way to launch quickly.

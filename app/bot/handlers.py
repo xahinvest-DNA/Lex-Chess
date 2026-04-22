@@ -35,8 +35,13 @@ def build_router(coordinator: IntakeCoordinator) -> Router:
             "Команды:\n"
             "/start - начать заявку\n"
             "/restart - начать заново\n"
+            "/llm_status - проверить подключение AI\n"
             "/help - показать подсказку"
         )
+
+    @router.message(Command("llm_status"))
+    async def on_llm_status(message: Message) -> None:
+        await message.answer(coordinator.llm_status())
 
     @router.message(F.text)
     async def on_text(message: Message) -> None:
