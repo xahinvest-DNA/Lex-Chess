@@ -63,6 +63,38 @@ site/data/site-leads-errors.jsonl
 
 The form sends UTM tags and the current page URL so Bitrix24 can preserve lead attribution.
 
+## Embeddable widget
+
+Any external site or website builder can load the intake widget with one script:
+
+```html
+<script
+  src="https://dnatext.ru/widget.js"
+  data-title="Lex Chess"
+  data-subtitle="Первичная юридическая диагностика"
+  data-button-text="Спросить юриста"
+  data-position="right"
+  data-accent="#f4f4f0"
+  defer
+></script>
+```
+
+For another backend domain, override the API endpoint:
+
+```html
+<script
+  src="https://dnatext.ru/widget.js"
+  data-api-url="https://dnatext.ru/api/leads"
+  defer
+></script>
+```
+
+Set `WIDGET_ALLOWED_ORIGINS` to a comma-separated allowlist for production, for example:
+
+```text
+WIDGET_ALLOWED_ORIGINS=https://client-site.ru,https://www.client-site.ru
+```
+
 ## SEO foundations
 
 - metadata and canonical URLs;

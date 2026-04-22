@@ -5,29 +5,51 @@ import { buildTelegramLeadDeepLink, notifyManagerInTelegram } from "@/lib/telegr
 
 export const runtime = "nodejs";
 
+export async function OPTIONS(request) {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders(request)
+  });
+}
+
 export async function POST(request) {
-  const payload = await request.json();
+  const headersForResponse = corsHeaders(request);
+  let payload;
+
+  try {
+    payload = await request.json();
+  } catch {
+    return jsonWithCors(
+      { ok: false, error: "Некорректный формат заявки." },
+      { status: 400 },
+      headersForResponse
+    );
+  }
+
   const required = ["service", "situation", "name", "phone"];
   const missing = required.filter((field) => !String(payload[field] || "").trim());
 
   if (missing.length) {
-    return Response.json(
+    return jsonWithCors(
       { ok: false, error: "Заполните направление, ситуацию, имя и телефон." },
-      { status: 400 }
+      { status: 400 },
+      headersForResponse
     );
   }
 
   if (String(payload.situation).trim().length < 20) {
-    return Response.json(
+    return jsonWithCors(
       { ok: false, error: "Опишите ситуацию чуть подробнее: минимум 20 символов." },
-      { status: 400 }
+      { status: 400 },
+      headersForResponse
     );
   }
 
   if (!payload.personalDataConsent || !payload.communicationConsent) {
-    return Response.json(
+    return jsonWithCors(
       { ok: false, error: "Для отправки заявки нужно подтвердить согласия под формой." },
-      { status: 400 }
+      { status: 400 },
+      headersForResponse
     );
   }
 
@@ -36,7 +58,7 @@ export async function POST(request) {
   const lead = {
     ...payload,
     requestId: crypto.randomUUID(),
-    source: "website",
+    source: payload.source || "website",
     createdAt: new Date().toISOString(),
     pageUrl: payload.pageUrl || headers.get("referer") || "",
     referrer: headers.get("referer") || "",
@@ -114,18 +136,19 @@ export async function POST(request) {
   };
 
   if (crmResult.error) {
-    return Response.json(
+    return jsonWithCors(
       {
         ...responseBody,
         ok: false,
         error:
           "Заявка сохранена локально, но пока не передана в CRM. Проверьте соединение с Bitrix24 и повторите отправку."
       },
-      { status: 502 }
+      { status: 502 },
+      headersForResponse
     );
   }
 
-  return Response.json(responseBody);
+  return jsonWithCors(responseBody, {}, headersForResponse);
 }
 
 function extractUtm(payload, requestUrl) {
@@ -134,4 +157,32 @@ function extractUtm(payload, requestUrl) {
   return Object.fromEntries(
     keys.map((key) => [key, fromPayload[key] || requestUrl.searchParams.get(key) || ""])
   );
+}
+
+function jsonWithCors(body, init = {}, headers = {}) {
+  return Response.json(body, {
+    ...init,
+    headers: {
+      ...headers,
+      ...(init.headers || {})
+    }
+  });
+}
+
+function corsHeaders(request) {
+  const origin = request.headers.get("origin") || "";
+  const configured = (process.env.WIDGET_ALLOWED_ORIGINS || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const allowAny = configured.length === 0 || configured.includes("*");
+  const allowedOrigin = allowAny || configured.includes(origin) ? origin || "*" : configured[0] || "*";
+
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, X-LexChess-Widget",
+    "Access-Control-Max-Age": "86400",
+    Vary: "Origin"
+  };
 }
