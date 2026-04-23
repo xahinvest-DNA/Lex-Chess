@@ -1,7 +1,13 @@
 import unittest
 
 from app.config import Settings
-from app.services.llm import LLMAssistant, build_followup_input, extract_output_text
+from app.services.llm import (
+    LLMAssistant,
+    NON_LEGAL_FALLBACK,
+    build_followup_input,
+    extract_output_text,
+    is_legal_followup,
+)
 
 
 def build_settings(**overrides) -> Settings:
@@ -71,6 +77,26 @@ class LLMAssistantTests(unittest.TestCase):
         }
 
         self.assertEqual(extract_output_text(payload), "Первая часть.\nВторая часть.")
+
+    def test_is_legal_followup_detects_legal_message(self) -> None:
+        result = is_legal_followup(
+            "Мне никто не позвонил, когда со мной свяжется юрист?",
+            {"practice_area": "Раздел имущества"},
+        )
+
+        self.assertTrue(result)
+
+    def test_is_legal_followup_rejects_irrelevant_message(self) -> None:
+        result = is_legal_followup(
+            "Как приготовить суп",
+            {"practice_area": "Раздел имущества", "situation_summary": "Спор по квартире"},
+            [{"role": "assistant", "content": "Удобно ли принять звонок?"}],
+        )
+
+        self.assertFalse(result)
+
+    def test_non_legal_fallback_is_business_only(self) -> None:
+        self.assertIn("юридической заявке", NON_LEGAL_FALLBACK)
 
 
 if __name__ == "__main__":

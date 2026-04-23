@@ -10,6 +10,11 @@ from app.config import Settings
 
 logger = logging.getLogger(__name__)
 
+NON_LEGAL_FALLBACK = (
+    "Помогу только по вашей юридической заявке. "
+    "Если хотите, напишите, что именно нужно по делу: сроки связи, документы, обстоятельства спора или уточнение по ситуации."
+)
+
 
 class LLMAssistant:
     def __init__(self, settings: Settings) -> None:
@@ -34,6 +39,9 @@ class LLMAssistant:
     ) -> str | None:
         if not self.is_enabled:
             return None
+
+        if not is_legal_followup(user_message, answers, history or []):
+            return NON_LEGAL_FALLBACK
 
         try:
             async with httpx.AsyncClient(timeout=self.settings.openai_timeout_seconds) as client:
@@ -65,6 +73,10 @@ def build_followup_instructions(settings: Settings) -> str:
         "Клиент уже оставил заявку, а вся переписка попадает юристу в CRM. "
         "Отвечай как человек в чате: тепло, спокойно, без канцелярита и без повторяющихся дисклеймеров. "
         "Не называй себя AI, моделью, роботом или предварительным AI-ответом. "
+        "Ты общаешься только по юридической заявке клиента. "
+        "Если сообщение не относится к юридическому вопросу, заявке, документам, срокам, записи на консультацию или связи с юристом, "
+        "не поддерживай свободную беседу и не отвечай по посторонней теме. "
+        "В таком случае вежливо верни разговор к делу одной короткой фразой. "
         "Не начинай каждый ответ одинаково. Не повторяй постоянно, что юрист все увидит: это можно сказать только если действительно уместно. "
         "Учитывай предыдущие сообщения в этом Telegram-диалоге и продолжай разговор, а не начинай квалификацию заново. "
         "Если клиент сообщает новый факт, коротко подтверди, что понял, и объясни, почему этот факт важен. "
@@ -123,3 +135,63 @@ def extract_output_text(payload: dict[str, Any]) -> str:
             if isinstance(text, str):
                 chunks.append(text)
     return "\n".join(chunks)
+
+
+LEGAL_MARKERS = [
+    "юрист",
+    "заявк",
+    "дел",
+    "суд",
+    "развод",
+    "имуществ",
+    "банкрот",
+    "долг",
+    "ипотек",
+    "квартир",
+    "машин",
+    "авто",
+    "документ",
+    "егрн",
+    "птс",
+    "договор",
+    "срок",
+    "позвон",
+    "связ",
+    "консульта",
+    "пристав",
+    "кредит",
+    "мфо",
+    "алимент",
+    "супруг",
+    "супруга",
+    "брак",
+    "муж",
+    "жена",
+    "раздел",
+    "лид",
+]
+
+
+def is_legal_followup(
+    user_message: str,
+    answers: dict[str, Any],
+    history: list[dict[str, str]] | None = None,
+) -> bool:
+    current_text = user_message.lower()
+    if any(marker in current_text for marker in LEGAL_MARKERS):
+        return True
+
+    short_message = len(current_text.split()) <= 8
+    if short_message:
+        return False
+
+    text = " ".join(
+        [
+            user_message,
+            str(answers.get("practice_area") or ""),
+            str(answers.get("situation_summary") or ""),
+            str(answers.get("financial_or_family_context") or ""),
+            " ".join(str(item.get("content") or "") for item in (history or [])[-4:]),
+        ]
+    ).lower()
+    return any(marker in text for marker in LEGAL_MARKERS)
