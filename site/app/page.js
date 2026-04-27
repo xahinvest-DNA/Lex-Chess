@@ -7,49 +7,93 @@ import JsonLd from "@/components/JsonLd";
 import { faqSchema } from "@/lib/schema";
 import { homeFaq, services, SITE } from "@/lib/site-data";
 
+const trustPoints = [
+  "Работаем только с физическими лицами",
+  "Конфиденциальная первичная диагностика",
+  "Онлайн и очно по согласованию"
+];
+
+const clientBenefits = [
+  "Понимает, подходит ли его ситуация под нашу специализацию.",
+  "Не повторяет одно и то же в форме, мессенджере и звонке.",
+  "Получает понятный следующий шаг без завышенных обещаний."
+];
+
+const diagnosticPoints = [
+  "Система собирает направление, срочность, документы и удобный канал связи.",
+  "Юрист получает уже собранный контекст, а не пустую заявку без деталей.",
+  "Telegram остается опцией после отправки, а не обязательным шагом."
+];
+
+const processSteps = [
+  {
+    title: "Коротко описываете ситуацию",
+    text: "Оставляете заявку на сайте и проходите первичную диагностику без лишней переписки."
+  },
+  {
+    title: "Получаем структуру по делу",
+    text: "Форма собирает нужные вводные: направление, срочность, факты, документы и способ связи."
+  },
+  {
+    title: "Согласуем следующий шаг",
+    text: "После первичной оценки согласуем формат консультации, документы и удобное время контакта."
+  }
+];
+
 export default function HomePage() {
   return (
     <main>
       <JsonLd data={faqSchema(homeFaq)} />
 
-      <section className="hero section-shell">
+      <section className="hero hero--light section-shell">
         <div className="hero__content">
-          <p className="eyebrow">Банкротство физлиц · развод · раздел имущества</p>
-          <h1>Юридическая защита для частных клиентов, когда на кону деньги, семья и имущество.</h1>
+          <p className="eyebrow">Банкротство физических лиц • развод • раздел имущества</p>
+          <h1>Юридическая помощь частным клиентам в спокойной, понятной и аккуратной подаче.</h1>
           <p className="hero__lead">
-            Мы строим стратегию как шахматную партию: сначала видим риски, затем выбираем ход,
-            который защищает вас от лишних потерь.
+            Сайт помогает человеку быстро понять, с какой проблемой мы работаем, что происходит после заявки и как
+            выглядит первый контакт с юристом. Без перегруза, без тяжелой атмосферы и без пустых обещаний.
           </p>
+
           <div className="hero__actions">
             <a className="button button--primary" href="#diagnostic">
-              Пройти диагностику
+              Получить первичную оценку
             </a>
             <a className="button button--ghost" href={`tel:${SITE.phone.replace(/\D/g, "")}`}>
               Позвонить юристу
             </a>
           </div>
-          <div className="trust-strip" aria-label="Ключевые преимущества">
-            <span>Физические лица</span>
-            <span>Конфиденциально</span>
-            <span>Документы и суд</span>
+
+          <div className="trust-strip" aria-label="Преимущества">
+            {trustPoints.map((item) => (
+              <span key={item}>{item}</span>
+            ))}
           </div>
         </div>
-        <div className="hero__emblem" aria-hidden="true">
-          <div className="emblem-card">
-            <span>Legal strategy</span>
-            <strong>01</strong>
-            <p>Позиция строится до первого процессуального шага.</p>
+
+        <aside className="hero-visual">
+          <div className="hero-photo-card">
+            <img
+              src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1400&q=80"
+              alt="Спокойная консультация с юристом в светлом офисе"
+              loading="eager"
+            />
+            <div className="hero-photo-badge">
+              <strong>Lex Chess</strong>
+              <span>Первичный контакт должен вызывать доверие, а не напряжение.</span>
+            </div>
           </div>
-        </div>
+        </aside>
       </section>
 
-      <section className="section-shell section">
+      <section className="section-shell section section--compact">
         <div className="section-head">
-          <p className="eyebrow">Три практики</p>
-          <h2>Сфокусированный сайт конвертирует лучше универсального каталога услуг.</h2>
+          <div>
+            <p className="eyebrow">Направления</p>
+            <h2>Оставляем три четких услуги, чтобы человеку было легче узнать свою ситуацию и оставить заявку.</h2>
+          </div>
           <p>
-            Для SEO и продаж каждая специализация вынесена в отдельную посадочную страницу с
-            собственным интентом, FAQ, внутренними ссылками и schema.org.
+            Узкая структура повышает доверие и работает лучше универсального каталога: человек сразу видит, что сайт
+            сделан под конкретные запросы частных клиентов.
           </p>
         </div>
         <div className="service-grid">
@@ -59,87 +103,86 @@ export default function HomePage() {
               <p className="eyebrow">{service.accent}</p>
               <h3>{service.shortTitle}</h3>
               <p>{service.description}</p>
+              <strong className="service-card__cta">Подробнее</strong>
             </Link>
           ))}
         </div>
+      </section>
+
+      <section className="section-shell photo-story">
+        <div className="photo-story__image">
+          <img
+            src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1400&q=80"
+            alt="Работа с документами и правовой оценкой"
+            loading="lazy"
+          />
+        </div>
+        <div className="photo-story__content">
+          <p className="eyebrow">Первое впечатление</p>
+          <h2>Доверие появляется, когда сайт выглядит как аккуратная консультация, а не как перегруженный лендинг.</h2>
+          <p>
+            Поэтому мы убрали лишнюю дробность, уменьшили количество равнозначных карточек и добавили живые визуальные
+            акценты. Теперь структура воспринимается спокойнее и ближе к реальной юридической практике.
+          </p>
+          <ul className="check-list">
+            {clientBenefits.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="section-shell split-section split-section--highlight" id="diagnostic">
+        <div className="split-section__content">
+          <p className="eyebrow">Диагностика на сайте</p>
+          <h2>Основное действие остается одним: человек оставляет заявку прямо на сайте и получает понятный маршрут.</h2>
+          <p>
+            Логику intake-бота мы сохранили, но окружили ее более спокойной и доверительной подачей. Теперь форма не
+            спорит с дизайном страницы, а выглядит как органичное продолжение консультации.
+          </p>
+          <ul className="check-list">
+            {diagnosticPoints.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+        <LeadIntake />
+      </section>
+
+      <section className="section-shell process-section">
+        <div className="section-head section-head--single">
+          <div>
+            <p className="eyebrow">Как это выглядит</p>
+            <h2>Простой путь от первого вопроса до следующего практического шага.</h2>
+          </div>
+        </div>
+        <ol className="process-list process-list--compact">
+          {processSteps.map((item) => (
+            <li key={item.title}>
+              <strong>{item.title}</strong>
+              <span>{item.text}</span>
+            </li>
+          ))}
+        </ol>
       </section>
 
       <section className="section-shell section">
         <ConsultationTerms />
       </section>
 
-      <section className="section-shell split-section" id="diagnostic">
-        <div>
-          <p className="eyebrow">Будущая точка интеграции с ботом</p>
-          <h2>Сайт-бот собирает лиды в структуре, удобной для Bitrix24 и юриста.</h2>
-          <p>
-            Пользователь проходит диагностику прямо на сайте, без обязательного перехода в
-            мессенджер. Telegram остаётся опцией после отправки: сохранить диалог, дослать
-            документы или получить уточнение.
-          </p>
-          <ul className="check-list">
-            <li>направление и срочность для маршрутизации;</li>
-            <li>описание ситуации для первичной оценки;</li>
-            <li>контакт и канал связи для follow-up;</li>
-            <li>сохранение источника lead source = website.</li>
-          </ul>
-        </div>
-        <LeadIntake />
-      </section>
-
-      <section className="section-shell section">
-        <div className="section-head">
-          <p className="eyebrow">Архитектура доверия</p>
-          <h2>Что должно быть на юридическом сайте, чтобы человек оставил заявку.</h2>
-        </div>
-        <div className="proof-grid">
-          {[
-            ["Проблема", "Показываем, что понимаем давление долгов, развода и имущественного спора."],
-            ["Маршрут", "Объясняем этапы и документы без перегруза юридическим языком."],
-            ["Риски", "Не обещаем гарантированный результат, а заранее называем ограничения."],
-            ["Контакт", "Даем форму, телефон, Telegram и понятный следующий шаг."],
-            ["SEO", "Создаем отдельные страницы под разные поисковые намерения."],
-            ["Контент", "Добавляем статьи, FAQ, перелинковку, sitemap и schema.org."]
-          ].map(([title, text]) => (
-            <article className="proof-card" key={title}>
-              <h3>{title}</h3>
-              <p>{text}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
       <section className="section-shell section">
         <LegalDisclaimer />
       </section>
 
-      <section className="section-shell process-section">
-        <p className="eyebrow">Как работаем</p>
-        <h2>От первичного контакта к юридической стратегии.</h2>
-        <ol className="process-list">
-          <li>
-            <strong>Диагностика</strong>
-            <span>Собираем факты, документы, срочность и желаемый результат.</span>
-          </li>
-          <li>
-            <strong>Карта рисков</strong>
-            <span>Показываем слабые места, сроки, доказательства и вероятные сценарии.</span>
-          </li>
-          <li>
-            <strong>План действий</strong>
-            <span>Выбираем переговоры, документы, суд или процедуру банкротства.</span>
-          </li>
-          <li>
-            <strong>Сопровождение</strong>
-            <span>Ведем коммуникацию, подачу документов и контроль результата.</span>
-          </li>
-        </ol>
-      </section>
-
       <section className="section-shell faq-section" id="faq">
         <div className="section-head">
-          <p className="eyebrow">FAQ</p>
-          <h2>Ответы на вопросы, которые влияют на конверсию и поисковую видимость.</h2>
+          <div>
+            <p className="eyebrow">FAQ</p>
+            <h2>Короткие ответы на вопросы, которые чаще всего мешают человеку оставить заявку.</h2>
+          </div>
+          <p>
+            FAQ оставляем как важный доверительный и SEO-блок, но без лишнего визуального шума вокруг него.
+          </p>
         </div>
         <div className="faq-list">
           {homeFaq.map((item) => (

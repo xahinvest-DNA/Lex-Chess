@@ -22,9 +22,14 @@ export default function Header() {
         ))}
       </nav>
 
-      <a className="header-phone" href={`tel:${SITE.phone.replace(/\D/g, "")}`}>
-        {SITE.phone}
-      </a>
+      <div className="header-actions">
+        <a className="header-phone" href={`tel:${SITE.phone.replace(/\D/g, "")}`}>
+          {SITE.phone}
+        </a>
+        <a className="button button--header" href="#diagnostic">
+          Оставить заявку
+        </a>
+      </div>
     </header>
   );
 }

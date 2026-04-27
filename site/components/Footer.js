@@ -5,10 +5,20 @@ import { SITE, services } from "@/lib/site-data";
 export default function Footer() {
   return (
     <footer className="footer">
-      <div>
-        <p className="eyebrow">Юридическая стратегия для частных клиентов</p>
-        <h2>Начните с диагностики, а не с обещаний.</h2>
+      <div className="footer-top">
+        <div>
+          <p className="eyebrow">Lex Chess</p>
+          <h2>Первичная юридическая диагностика для частных клиентов.</h2>
+          <p className="footer-lead">
+            Работаем по трем направлениям: банкротство физических лиц, развод и раздел имущества. Без универсального
+            каталога услуг и без обещаний результата до анализа ситуации.
+          </p>
+        </div>
+        <a className="button button--primary footer-cta" href="#diagnostic">
+          Перейти к заявке
+        </a>
       </div>
+
       <div className="footer-grid">
         <div>
           <strong>{SITE.legalName}</strong>
@@ -21,7 +31,7 @@ export default function Footer() {
           </p>
         </div>
         <div>
-          <strong>Услуги</strong>
+          <strong>Направления</strong>
           {services.map((service) => (
             <Link key={service.slug} href={`/services/${service.slug}`}>
               {service.shortTitle}
@@ -29,10 +39,10 @@ export default function Footer() {
           ))}
         </div>
         <div>
-          <strong>SEO-разделы</strong>
+          <strong>Полезное</strong>
           <Link href="/articles">Статьи и разборы</Link>
           <Link href="/#diagnostic">Онлайн-диагностика</Link>
-          <Link href="/#faq">Вопросы и ответы</Link>
+          <Link href="/#faq">Частые вопросы</Link>
         </div>
         <div>
           <strong>Документы</strong>
@@ -41,9 +51,11 @@ export default function Footer() {
           <Link href="/communication-consent">Согласие на обратную связь</Link>
         </div>
       </div>
+
       <p className="legal-note">
-        Информация на сайте не является индивидуальной юридической консультацией. Точный маршрут
-        определяется после анализа документов и фактических обстоятельств.
+        Информация на сайте носит справочный характер и не является индивидуальной юридической консультацией,
+        публичной офертой или гарантией результата. Правовая позиция формируется после анализа документов и фактических
+        обстоятельств.
       </p>
     </footer>
   );
